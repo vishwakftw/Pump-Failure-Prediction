@@ -4,10 +4,10 @@ import numpy as np
 from argparse import ArgumentParser
 
 p = ArgumentParser()
-p.add_argument('--proposal_dist', type=str, default='PoissonProposal',
+p.add_argument('--proposal_dist', type=str, default='NormalProposal',
                                   help='Specify a different proposal distribution, one of \
-                                        UniformProposal, NormalProposal \
-                                        or PoissonProposal (default)')
+                                        UniformProposal, PoissonProposal \
+                                        or NormalProposal (default)')
 p.add_argument('--print_summary', action='store_true', help='Toggle to print summary of trace')
 args = p.parse_args()
 
