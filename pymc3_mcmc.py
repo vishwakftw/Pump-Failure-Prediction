@@ -31,12 +31,12 @@ with pumps_mcmc_model:
 with pumps_mcmc_model:
     step = pymc3.Metropolis(proposal_dist=getattr(pymc3.step_methods.metropolis,
                                                   args.proposal_dist))
-    trace = pymc3.sample(10000, step=step)
+    trace = pymc3.sample(15000, step=step)
     if args.print_summary:
         print(pymc3.summary(trace))
 
 # Perform prediction
 with pumps_mcmc_model:
-    xs = pymc3.sample_posterior_predictive(trace, samples=10000)
+    xs = pymc3.sample_posterior_predictive(trace, samples=1000)
     predictions = [round(np.mean(xs['x{}'.format(i)])) for i in range(dataset.shape[0])]
     print(predictions)

@@ -8,6 +8,14 @@ from scipy.stats import gamma as gamma_dist
 from scipy.stats import poisson as poi_dist
 from scipy.stats import uniform as uni_dist
 
+from argparse import ArgumentParser
+
+p = ArgumentParser()
+p.add_argument('--print_summary', action='store_true', help='Toggle to print summary')
+p.add_argument('--iterations', type=int, default=15000, help='Number of iterations for MCMC')
+p.add_argument('--burn_in', type=int, default=5000, help='Number of iterations for burn in')
+args = p.parse_args()
+
 P = 10
 
 # Get the dataset
@@ -53,14 +61,11 @@ def log_posterior_for_theta(thetas, idx, dataset, alpha, beta):
 proposal_dist = normal_dist(scale=np.ones((2 + P,)))
 uniform_dist = uni_dist(loc=np.zeros(2 + P), scale=np.ones(2 + P))
 
-def mcmc_loop(alpha_init, beta_init, thetas_init, iterations=10000):
+def mcmc_loop(alpha_init, beta_init, thetas_init, burn_in, iterations):
     """
     MCMC loop function
     """
     # MCMC sampling stats
-    n_accept_alpha = 0
-    n_accept_beta = 0
-    n_accept_thetas = [0] * P
     samples_alpha = [alpha_init]
     samples_beta = [beta_init]
     samples_thetas = [[theta_init] for theta_init in thetas_init]
@@ -69,7 +74,7 @@ def mcmc_loop(alpha_init, beta_init, thetas_init, iterations=10000):
     beta = beta_init
     thetas = thetas_init
 
-    for i in tqdm(range(iterations)):
+    for i in tqdm(range(burn_in + iterations)):
         # Sample deltas
         deltas = proposal_dist.rvs()
 
@@ -85,26 +90,26 @@ def mcmc_loop(alpha_init, beta_init, thetas_init, iterations=10000):
         accept_alpha = False
         if np.log(acceptance_vals[0]) < log_posterior_for_alpha(new_alpha, beta, thetas) - \
                                         log_posterior_for_alpha(alpha, beta, thetas):
-            n_accept_alpha += 1
             accept_alpha = True
-            samples_alpha.append(new_alpha)
+            if i >= args.burn_in:
+                samples_alpha.append(new_alpha)
 
         # Accept or reject beta
         accept_beta = False
         if np.log(acceptance_vals[1]) < log_posterior_for_beta(new_beta, alpha, thetas) - \
                                         log_posterior_for_beta(beta, alpha, thetas):
-            n_accept_beta += 1
             accept_beta = True
-            samples_beta.append(new_beta)
+            if i >= args.burn_in:
+                samples_beta.append(new_beta)
 
         # Accept or reject thetas
         accept_thetas = [False] * P
         for idx in range(P):
             if np.log(acceptance_vals[2 + idx]) < log_posterior_for_theta(new_thetas, idx, dataset, alpha, beta) - \
                                                   log_posterior_for_theta(thetas, idx, dataset, alpha, beta):
-                n_accept_thetas[idx] += 1
                 accept_thetas[idx] = True
-                samples_thetas[idx].append(new_thetas[idx])
+                if i >= args.burn_in:
+                    samples_thetas[idx].append(new_thetas[idx])
 
         # Now perform swapping
         if accept_alpha:
@@ -115,9 +120,10 @@ def mcmc_loop(alpha_init, beta_init, thetas_init, iterations=10000):
             if accept_thetas[idx]:
                 thetas[idx] = new_thetas[idx]
 
-    return (n_accept_alpha, n_accept_beta, n_accept_thetas), (samples_alpha, samples_beta, samples_thetas)
+    return (samples_alpha, samples_beta, samples_thetas)
 
-n_accepts, samples = mcmc_loop(0.3, 0.3, np.array([0.5, 0.01, 0.05, 0.05, 0.5, 0.5, 0.7, 0.8, 1.3, 1.5]), iterations=15000)
+samples = mcmc_loop(0.1, 0.2, np.array([0.3, 0.35, 0.4, 0.45, 0.5, 0.55, 0.6, 0.65, 0.7, 0.75]),
+                    burn_in=args.burn_in, iterations=args.iterations)
 
 def format_sample_info(samples):
     info_dict = {}
@@ -150,6 +156,6 @@ for idx in range(P):
     for sample in samples[2][idx]:
         lambda_idx = dataset[idx, 0] * sample
         pred_i += round(poi_dist(lambda_idx).rvs(1000).mean())
-    predictions.append(round(pred_i / n_accepts[2][idx]))
+    predictions.append(round(pred_i / len(samples[2][idx])))
 
 print(predictions)
