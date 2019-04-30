@@ -16,17 +16,18 @@
 
 #### Further details
 
-- Further details of the problem and comparison of implementations are presented in the [report](https://github.com/vishwakftw/Pump-Failure-Prediction/blob/master/report.pdf).
+- Further details of the problem and comparison of implementations are presented in the [report](report.pdf).
 
 #### Running the code
 
 - Please install the requirements specified in [requirements.txt](requirements.txt). To use the PyMC3 implementations, you will need to install PyMC3.
-- `python <script.py> --help` will print a set of configurable options while running the code.
+- `python <script> --help` will print a set of configurable options while running the code where `<script>` is one of `[numpy_mcmc.py, pymc3_mcmc.py, pymc3_vi.py]`.
+- The dataset for the assignment is [here](dataset.txt)
 
 #### References
 
 - OpenBUGS description: <http://www.openbugs.net/Examples/Pumps.html>
-- George E.I., Makov U.E., Smith A.F.M., _Conjugate Likelihood Distributions_, Scandinavian Journal of Statistics
+- George E.I., Makov U.E., Smith A.F.M., _Conjugate Likelihood Distributions_, Scandinavian Journal of Statistics, 1993.
 
 -------
 
