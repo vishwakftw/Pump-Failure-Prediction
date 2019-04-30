@@ -9,6 +9,7 @@ p.add_argument('--proposal_dist', type=str, default='NormalProposal',
                                         UniformProposal, PoissonProposal \
                                         or NormalProposal (default)')
 p.add_argument('--print_summary', action='store_true', help='Toggle to print summary of trace')
+p.add_argument('--samples', type=int, default=15000, help='Number of sampling iterations')
 args = p.parse_args()
 
 # Get the dataset
@@ -31,7 +32,7 @@ with pumps_mcmc_model:
 with pumps_mcmc_model:
     step = pymc3.Metropolis(proposal_dist=getattr(pymc3.step_methods.metropolis,
                                                   args.proposal_dist))
-    trace = pymc3.sample(15000, step=step)
+    trace = pymc3.sample(args.samples, step=step)
     if args.print_summary:
         print(pymc3.summary(trace))
 
